@@ -148,8 +148,7 @@ static bool _label(struct message *m, const unsigned char **bufp, const unsigned
 		if (labelLen > 63)
 		    // maximum label length is 63 octets
 		    return false;
-		long nameLen = (name + labelLen) - *namep;
-		if (nameLen > 255)
+		if ((name + labelLen) - *namep > 255)
             // maximum names length is 255 octets
 		    return false;
 
