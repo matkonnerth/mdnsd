@@ -131,7 +131,7 @@ int MDNSD_EXPORT mdnsd_in(mdns_daemon_t *d, struct message *m, struct sockaddr *
  * Outgoing messge to be delivered to host, returns >0 if one was
  * returned and m/ip/port set
  */
-int MDNSD_EXPORT mdnsd_out(mdns_daemon_t *d, struct message *m, struct in_addr *ip, unsigned short int *port);
+int MDNSD_EXPORT mdnsd_out(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned short int *port);
 
 /**
  * returns the max wait-time until mdnsd_out() needs to be called again 
