@@ -77,7 +77,7 @@ struct query {
 
 struct unicast {
 	int id;
-    in_addr_t to;
+	struct sockaddr *to;
 	unsigned short int port;
 	mdns_record_t *r;
 	struct unicast *next;
@@ -309,7 +309,7 @@ static void _r_send(mdns_daemon_t *d, mdns_record_t *r)
 }
 
 /* Create generic unicast response struct */
-static void _u_push(mdns_daemon_t *d, mdns_record_t *r, int id, in_addr_t to, unsigned short int port)
+static void _u_push(mdns_daemon_t *d, mdns_record_t *r, int id, struct sockaddr *to, unsigned short int port)
 {
 	struct unicast *u;
 
@@ -673,7 +673,7 @@ void mdnsd_register_receive_callback(mdns_daemon_t *d, mdnsd_record_received_cal
 	d->received_callback_data = data;
 }
 
-int mdnsd_in(mdns_daemon_t *d, struct message *m, in_addr_t ip, unsigned short int port)
+int mdnsd_in(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned short int port)
 {
 	int i;
 	mdns_record_t *r = 0;
@@ -1210,9 +1210,9 @@ unsigned short int mdnsd_step(mdns_daemon_t *d, int mdns_socket, bool processIn,
 
 	if (processIn) {
 		int bsize;
-		socklen_t ssize = sizeof(struct sockaddr_in);
 		unsigned char buf[MAX_PACKET_LEN];
-		struct sockaddr_in from;
+		struct sockaddr_storage from;
+		socklen_t ssize = sizeof(from);
 
 		while ((bsize = (int)recvfrom(mdns_socket, (char*)buf, MAX_PACKET_LEN, 0, (struct sockaddr *)&from, &ssize)) > 0) {
 			memset(&m, 0, sizeof(struct message));
@@ -1225,7 +1225,14 @@ unsigned short int mdnsd_step(mdns_daemon_t *d, int mdns_socket, bool processIn,
 #endif
 			if (!message_parse(&m, buf, (size_t)bsize))
 			    continue;
-			if (mdnsd_in(d, &m, from.sin_addr.s_addr, from.sin_port)!=0)
+
+			unsigned short int fromPort;
+			if (from.ss_family == AF_INET){
+				fromPort = ((struct sockaddr_in *)&from)->sin_port;
+			} else {
+				fromPort = ((struct sockaddr_in6 *)&from)->sin6_port;
+			}
+			if (mdnsd_in(d, &m,(struct sockaddr *)&from, fromPort) !=0)
 				return 2;
 		}
 #ifdef _WIN32
