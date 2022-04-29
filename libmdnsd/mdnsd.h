@@ -78,6 +78,7 @@ typedef struct mdns_answer {
 	unsigned short rdlen;
 	unsigned char *rdata;
 	struct in_addr ip;	/* A */
+	struct in6_addr ip6;	/* AAAA */
 	char *rdname;		/* NS/CNAME/PTR/SRV */
 	struct {
 		//cppcheck-suppress unusedStructMember

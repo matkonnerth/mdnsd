@@ -492,6 +492,10 @@ static int _cache(mdns_daemon_t *d, struct resource *r)
 	}
 
 	switch (r->type) {
+		case QTYPE_AAAA:
+			c->rr.ip6 = r->known.aaaa.ip6;
+		break;
+
 		case QTYPE_A:
 			c->rr.ip = r->known.a.ip;
 			break;

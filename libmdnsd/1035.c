@@ -368,6 +368,23 @@ static bool _rrparse(struct message *m, struct resource *rr, int count, const un
             *bufp += 4;
 			break;
 
+		case QTYPE_AAAA:
+			if (m->_len + INET6_ADDRSTRLEN > MAX_PACKET_LEN) {
+				return false;
+			}
+			rr[i].known.aaaa.name = (char *)m->_packet + m->_len;
+			m->_len += INET6_ADDRSTRLEN;
+			if (*bufp + rr->rdlength > bufferEnd) {
+				return false;
+			}
+			addr_bytes = (const unsigned char *)*bufp;
+			inet_ntop(AF_INET6,addr_bytes,rr[i].known.aaaa.name,INET6_ADDRSTRLEN);
+			for (size_t j = 0; j < rr->rdlength; j++) {
+				rr[i].known.aaaa.ip6.s6_addr[j] = addr_bytes[j];
+			}
+			*bufp += rr->rdlength;
+			break;
+
 		case QTYPE_NS:
 			if (!_label(m, bufp, bufferEnd, &(rr[i].known.ns.name))) {
                 return false;

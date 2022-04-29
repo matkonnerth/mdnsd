@@ -88,6 +88,11 @@ struct resource {
 			char *name;
 		} a;
 		struct {
+			struct in6_addr ip6;
+			//cppcheck-suppress unusedStructMember
+			char *name;
+		} aaaa;
+		struct {
 			//cppcheck-suppress unusedStructMember
 			char *name;
 		} ns;
