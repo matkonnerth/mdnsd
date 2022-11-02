@@ -77,7 +77,7 @@ struct query {
 
 struct unicast {
 	int id;
-    in_addr_t to;
+	struct sockaddr *to;
 	unsigned short int port;
 	mdns_record_t *r;
 	struct unicast *next;
@@ -309,7 +309,7 @@ static void _r_send(mdns_daemon_t *d, mdns_record_t *r)
 }
 
 /* Create generic unicast response struct */
-static void _u_push(mdns_daemon_t *d, mdns_record_t *r, int id, in_addr_t to, unsigned short int port)
+static void _u_push(mdns_daemon_t *d, mdns_record_t *r, int id, struct sockaddr *to, unsigned short int port)
 {
 	struct unicast *u;
 
@@ -492,6 +492,10 @@ static int _cache(mdns_daemon_t *d, struct resource *r)
 	}
 
 	switch (r->type) {
+		case QTYPE_AAAA:
+			c->rr.ip6 = r->known.aaaa.ip6;
+		break;
+
 		case QTYPE_A:
 			c->rr.ip = r->known.a.ip;
 			break;
@@ -669,7 +673,7 @@ void mdnsd_register_receive_callback(mdns_daemon_t *d, mdnsd_record_received_cal
 	d->received_callback_data = data;
 }
 
-int mdnsd_in(mdns_daemon_t *d, struct message *m, in_addr_t ip, unsigned short int port)
+int mdnsd_in(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned short int port)
 {
 	int i;
 	mdns_record_t *r = 0;
@@ -764,7 +768,7 @@ int mdnsd_in(mdns_daemon_t *d, struct message *m, in_addr_t ip, unsigned short i
 	return 0;
 }
 
-int mdnsd_out(mdns_daemon_t *d, struct message *m, struct in_addr *ip, unsigned short int *port)
+int mdnsd_out(mdns_daemon_t *d, struct message *m, struct sockaddr *ip, unsigned short int *port)
 {
 	mdns_record_t *r;
 	int ret = 0;
@@ -774,7 +778,23 @@ int mdnsd_out(mdns_daemon_t *d, struct message *m, struct in_addr *ip, unsigned 
 
 	/* Defaults, multicast */
 	*port = htons(5353);
-	ip->s_addr = inet_addr("224.0.0.251");
+	if(ip->sa_family == AF_INET6) {
+		struct sockaddr_in6 addr6;
+
+		memset(&addr6, 0, sizeof(addr6));
+		addr6.sin6_family = AF_INET6;
+		addr6.sin6_port = *port;
+		inet_pton(AF_INET6, "ff02::fb", &(addr6.sin6_addr));
+		memcpy(ip, &addr6, sizeof(addr6));
+	} else {
+			struct sockaddr_in addr;
+
+			memset(&addr, 0, sizeof(addr));
+			addr.sin_family = AF_INET;
+			addr.sin_port = *port;
+			inet_pton(AF_INET, "224.0.0.251", &(addr.sin_addr));
+			memcpy(ip, &addr, sizeof(addr));
+	}
 	m->header.qr = 1;
 	m->header.aa = 1;
 
@@ -786,7 +806,7 @@ int mdnsd_out(mdns_daemon_t *d, struct message *m, struct in_addr *ip, unsigned 
 
 		d->uanswers = u->next;
 		*port = u->port;
-		ip->s_addr = u->to;
+		ip = u->to;
 		m->id = (unsigned short int)u->id;
 		message_qd(m, u->r->rr.name, u->r->rr.type, (unsigned short int)d->clazz);
 		message_an(m, u->r->rr.name, u->r->rr.type, (unsigned short int)d->clazz, u->r->rr.ttl);
@@ -1206,9 +1226,9 @@ unsigned short int mdnsd_step(mdns_daemon_t *d, int mdns_socket, bool processIn,
 
 	if (processIn) {
 		int bsize;
-		socklen_t ssize = sizeof(struct sockaddr_in);
 		unsigned char buf[MAX_PACKET_LEN];
-		struct sockaddr_in from;
+		struct sockaddr_storage from;
+		socklen_t ssize = sizeof(from);
 
 		while ((bsize = (int)recvfrom(mdns_socket, (char*)buf, MAX_PACKET_LEN, 0, (struct sockaddr *)&from, &ssize)) > 0) {
 			memset(&m, 0, sizeof(struct message));
@@ -1221,7 +1241,14 @@ unsigned short int mdnsd_step(mdns_daemon_t *d, int mdns_socket, bool processIn,
 #endif
 			if (!message_parse(&m, buf, (size_t)bsize))
 			    continue;
-			if (mdnsd_in(d, &m, from.sin_addr.s_addr, from.sin_port)!=0)
+
+			unsigned short int fromPort;
+			if (from.ss_family == AF_INET){
+				fromPort = ((struct sockaddr_in *)&from)->sin_port;
+			} else {
+				fromPort = ((struct sockaddr_in6 *)&from)->sin6_port;
+			}
+			if (mdnsd_in(d, &m,(struct sockaddr *)&from, fromPort) !=0)
 				return 2;
 		}
 #ifdef _WIN32
@@ -1235,33 +1262,33 @@ unsigned short int mdnsd_step(mdns_daemon_t *d, int mdns_socket, bool processIn,
 	}
 
 	if (processOut) {
-		struct sockaddr_in to;
-		struct in_addr ip;
+		struct sockaddr_storage addrStorage;
+		struct sockaddr *to = (struct sockaddr*)&addrStorage;
+		socklen_t addrLength = sizeof(struct sockaddr_storage);
 		unsigned short int port;
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-align"
 #endif
-		while (mdnsd_out(d, &m, &ip, &port)) {
+
+		if(getsockname(mdns_socket, to, &addrLength))
+			return 2;
+		while (mdnsd_out(d, &m, to, &port)) {
 #ifdef __clang__
 #pragma clang diagnostic pop
-#endif	
+#endif
 			int len = message_packet_len(&m);
 			char* buf = (char*)message_packet(&m);
-			memset(&to, 0, sizeof(to));
-			to.sin_family = AF_INET;
-			to.sin_port = port;
-			to.sin_addr = ip;
 #if MDNSD_LOGLEVEL <= 100
 			MDNSD_LOG_TRACE("Send Data:");
 			dump_hex_pkg(buf, (int)len);
 #endif
 
-            #ifdef MDNSD_DEBUG_DUMP_PKGS_FILE
-            mdnsd_debug_dumpCompleteChunk(d, buf, (size_t) len);
-            #endif
-			if (sendto(mdns_socket, buf, (unsigned int)len, 0, (struct sockaddr *)&to,
-							sizeof(struct sockaddr_in)) != len) {
+#ifdef MDNSD_DEBUG_DUMP_PKGS_FILE
+			mdnsd_debug_dumpCompleteChunk(d, buf, (size_t) len);
+#endif
+			if ((sendto(mdns_socket, buf, (unsigned int)len, 0, to,
+						addrLength)) != len) {
 				return 2;
 			}
 		}

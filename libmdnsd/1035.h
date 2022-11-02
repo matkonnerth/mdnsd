@@ -72,6 +72,7 @@ struct question {
 #define QTYPE_CNAME  5
 #define QTYPE_PTR    12
 #define QTYPE_TXT    16
+#define QTYPE_AAAA   28
 #define QTYPE_SRV    33
 
 struct resource {
@@ -86,6 +87,11 @@ struct resource {
 			//cppcheck-suppress unusedStructMember
 			char *name;
 		} a;
+		struct {
+			struct in6_addr ip6;
+			//cppcheck-suppress unusedStructMember
+			char *name;
+		} aaaa;
 		struct {
 			//cppcheck-suppress unusedStructMember
 			char *name;
