@@ -56,8 +56,8 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
     mdns_daemon_t *d = mdnsd_new(QCLASS_IN, 1000);
 
-    in_addr_t addr = 0;
-    mdnsd_in(d, &m, addr, 2000);
+    struct sockaddr_storage addr;
+    mdnsd_in(d, &m, (struct sockaddr *)&addr, 2000);
 
     mdnsd_free(d);
 
