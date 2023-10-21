@@ -29,13 +29,13 @@ Build & Install
 The software is built for and developed on GNU/Linux systems, but should
 work on any UNIX like system.
 
-The GNU configure and build system is used, simply call the configure
-script to generate a Makefile.  If you are using the GitHub sources you
-first need to call `./autogen.sh` to generate the configure script.
+The cmake build system is used:
 
-    ./configure
-    make all
-    make install
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build . --verbose
+    cmake --install . --verbose
 
 
 Running
