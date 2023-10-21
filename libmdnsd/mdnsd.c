@@ -1192,7 +1192,7 @@ void mdnsd_set_ip(mdns_daemon_t *d, mdns_record_t *r, struct in_addr ip)
 	_r_publish(d, r);
 }
 
-void mdnsd_set_srv(mdns_daemon_t *d, mdns_record_t *r, unsigned short int priority, unsigned short int weight, unsigned short int port, char *name)
+void mdnsd_set_srv(mdns_daemon_t *d, mdns_record_t *r, unsigned short int priority, unsigned short int weight, unsigned short int port, const char *name)
 {
 	r->rr.srv.priority = priority;
 	r->rr.srv.weight = weight;
@@ -1202,7 +1202,7 @@ void mdnsd_set_srv(mdns_daemon_t *d, mdns_record_t *r, unsigned short int priori
 
 #if MDNSD_LOGLEVEL <= 100
 #include <ctype.h>
-static void dump_hex_pkg(char* buffer, int bufferLen) {
+static void dump_hex_pkg(const char* buffer, int bufferLen) {
 	char ascii[17];
 	memset(ascii,0,17);
 	for (int i = 0; i < bufferLen; i++)
@@ -1234,7 +1234,7 @@ unsigned short int mdnsd_step(mdns_daemon_t *d, int mdns_socket, bool processIn,
 			memset(&m, 0, sizeof(struct message));
 #if MDNSD_LOGLEVEL <= 100
 			MDNSD_LOG_TRACE("Got Data:");
-			dump_hex_pkg((char*)buf, bsize);
+			dump_hex_pkg((const char*)buf, bsize);
 #endif
 #ifdef MDNSD_DEBUG_DUMP_PKGS_FILE
             mdnsd_debug_dumpCompleteChunk(d, (char*)buf, (size_t) bsize);

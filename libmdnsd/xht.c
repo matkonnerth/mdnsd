@@ -107,7 +107,7 @@ void xht_set(xht_t *h, char *key, void *val)
 	_xht_set(h, key, val, 0);
 }
 
-void xht_store(xht_t *h, char *key, int klen, void *val, int vlen)
+void xht_store(xht_t *h, const char *key, int klen, void *val, int vlen)
 {
 	char *ckey, *cval;
 
@@ -124,7 +124,7 @@ void xht_store(xht_t *h, char *key, int klen, void *val, int vlen)
 }
 
 
-void *xht_get(xht_t *h, char *key)
+void *xht_get(xht_t *h, const char *key)
 {
 	xhn_t *n;
 
