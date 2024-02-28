@@ -15,14 +15,14 @@ static size_t _sd2txt_len(const char *key, char *val)
 	return ret;
 }
 
-static void _sd2txt_count(xht_t *h, char *key, void *val, void *arg)
+static void _sd2txt_count(xht_t *h, const char *key, void *val, void *arg)
 {
 	int *count = (int *)arg;
 
 	*count += (int)_sd2txt_len(key, (char *)val) + 1;
 }
 
-static void _sd2txt_write(xht_t *h, char *key, void *val, void *arg)
+static void _sd2txt_write(xht_t *h, const char *key, void *val, void *arg)
 {
 	unsigned char **txtp = (unsigned char **)arg;
 	char *cval = (char *)val;

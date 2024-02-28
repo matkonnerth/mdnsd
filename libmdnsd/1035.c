@@ -232,7 +232,7 @@ static int _lmatch(struct message *m, const char *l1, const char *l2)
 }
 
 /* Nasty, convert host into label using compression */
-static int _host(struct message *m, unsigned char **bufp, char *name)
+static int _host(struct message *m, unsigned char **bufp, const char *name)
 {
 	char label[256], *l;
 	int len = 0, x = 1, y = 0, last = 0;
@@ -532,43 +532,43 @@ bool message_parse(struct message *m, unsigned char *packet, size_t packetLen)
 	return true;
 }
 
-void message_qd(struct message *m, char *name, unsigned short int type, unsigned short int clazz)
+void message_qd(struct message *m, const char *name, unsigned short int type, unsigned short int clazz)
 {
 	m->qdcount++;
-    if (m->_buf == 0) {
-        m->_buf = m->_packet + 12;
-        m->_bufEnd = m->_packet + sizeof(m->_packet);
-    }
+	if (m->_buf == 0) {
+		m->_buf = m->_packet + 12;
+		m->_bufEnd = m->_packet + sizeof(m->_packet);
+	}
 	_host(m, &(m->_buf), name);
 	short2net(type, &(m->_buf));
 	short2net(clazz, &(m->_buf));
 }
 
-static void _rrappend(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
+static void _rrappend(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
 {
 	if (m->_buf == 0) {
-        m->_buf = m->_packet + 12;
-        m->_bufEnd = m->_packet + sizeof(m->_packet);
-    }
+		m->_buf = m->_packet + 12;
+		m->_bufEnd = m->_packet + sizeof(m->_packet);
+	}
 	_host(m, &(m->_buf), name);
 	short2net(type, &(m->_buf));
 	short2net(clazz, &(m->_buf));
 	long2net((uint32_t)ttl, &(m->_buf));
 }
 
-void message_an(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
+void message_an(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
 {
 	m->ancount++;
 	_rrappend(m, name, type, clazz, ttl);
 }
 
-void message_ns(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
+void message_ns(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
 {
 	m->nscount++;
 	_rrappend(m, name, type, clazz, ttl);
 }
 
-void message_ar(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
+void message_ar(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl)
 {
 	m->arcount++;
 	_rrappend(m, name, type, clazz, ttl);
@@ -580,7 +580,7 @@ void message_rdata_long(struct message *m, struct in_addr l)
 	long2net(l.s_addr, &(m->_buf));
 }
 
-void message_rdata_name(struct message *m, char *name)
+void message_rdata_name(struct message *m, const char *name)
 {
 	unsigned char *mybuf = m->_buf;
 
@@ -588,7 +588,7 @@ void message_rdata_name(struct message *m, char *name)
 	short2net((unsigned short)_host(m, &(m->_buf), name), &mybuf);
 }
 
-void message_rdata_srv(struct message *m, unsigned short int priority, unsigned short int weight, unsigned short int port, char *name)
+void message_rdata_srv(struct message *m, unsigned short int priority, unsigned short int weight, unsigned short int port, const char *name)
 {
 	unsigned char *mybuf = m->_buf;
 
@@ -613,7 +613,7 @@ unsigned char *message_packet(struct message *m)
 	unsigned char c, *buf = m->_buf, *bufEnd = m->_bufEnd;
 
 	m->_buf = m->_packet;
-    m->_bufEnd = m->_packet + sizeof(m->_packet);
+	m->_bufEnd = m->_packet + sizeof(m->_packet);
 	short2net(m->id, &(m->_buf));
 
 	if (m->header.qr)

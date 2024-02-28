@@ -215,7 +215,7 @@ void MDNSD_EXPORT mdnsd_done(mdns_daemon_t *d, mdns_record_t *r);
 void MDNSD_EXPORT mdnsd_set_raw(mdns_daemon_t *d, mdns_record_t *r, const char *data, unsigned short int len);
 void MDNSD_EXPORT mdnsd_set_host(mdns_daemon_t *d, mdns_record_t *r, const char *name);
 void MDNSD_EXPORT mdnsd_set_ip(mdns_daemon_t *d, mdns_record_t *r, struct in_addr ip);
-void MDNSD_EXPORT mdnsd_set_srv(mdns_daemon_t *d, mdns_record_t *r, unsigned short int priority, unsigned short int weight, unsigned short int port, char *name);
+void MDNSD_EXPORT mdnsd_set_srv(mdns_daemon_t *d, mdns_record_t *r, unsigned short int priority, unsigned short int weight, unsigned short int port, const char *name);
 
 /**
  * Process input queue and output queue. Should be called at least the time which is returned in nextSleep.

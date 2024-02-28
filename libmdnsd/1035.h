@@ -162,22 +162,22 @@ struct message *message_wire(void);
 /**
  * append a question to the wire message
  */
-void MDNSD_EXPORT message_qd(struct message *m, char *name, unsigned short int type, unsigned short int clazz);
+void MDNSD_EXPORT message_qd(struct message *m, const char *name, unsigned short int type, unsigned short int clazz);
 
 /**
  * append a resource record to the message, all called in order!
  */
-void MDNSD_EXPORT message_an(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl);
-void MDNSD_EXPORT message_ns(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl);
-void MDNSD_EXPORT message_ar(struct message *m, char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl);
+void MDNSD_EXPORT message_an(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl);
+void MDNSD_EXPORT message_ns(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl);
+void MDNSD_EXPORT message_ar(struct message *m, const char *name, unsigned short int type, unsigned short int clazz, unsigned long ttl);
 
 /**
  * Append various special types of resource data blocks
  */
 void MDNSD_EXPORT message_rdata_long (struct message *m, struct in_addr l);
-void MDNSD_EXPORT message_rdata_name (struct message *m, char *name);
+void MDNSD_EXPORT message_rdata_name (struct message *m, const char *name);
 void MDNSD_EXPORT message_rdata_srv  (struct message *m, unsigned short int priority, unsigned short int weight,
-			 unsigned short int port, char *name);
+			 unsigned short int port, const char *name);
 void MDNSD_EXPORT message_rdata_raw  (struct message *m, unsigned char *rdata, unsigned short int rdlength);
 
 /**
