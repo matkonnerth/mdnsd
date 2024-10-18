@@ -41,6 +41,9 @@ extern "C" {
 
 #else
 # include <arpa/inet.h>
+# if ESP_LWIP
+#  include "lwip/sockets.h"
+# endif
 #endif
 
 #if !defined(__bool_true_false_are_defined) && defined(_MSC_VER) && _MSC_VER < 1600
